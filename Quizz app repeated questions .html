@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Quiz App</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .quiz-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .quiz-header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border-radius: 20px 20px 0 0;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .question-container {
+            padding: 2rem;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .question-number {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+            border-radius: 50px;
+            padding: 0.5rem 1rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+        
+        .question-text {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .answer-option {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+        
+        .answer-option:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.2);
+        }
+        
+        .answer-option.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .answer-option input[type="radio"] {
+            margin-right: 1rem;
+            transform: scale(1.2);
+        }
+        
+        .timer {
+            background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
+            color: white;
+            border-radius: 50px;
+            padding: 0.5rem 1.5rem;
+            font-weight: bold;
+            font-size: 1.1rem;
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .timer.warning {
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .progress-bar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 8px;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 50px;
+            padding: 0.8rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            border: none;
+            border-radius: 50px;
+            padding: 0.8rem 2rem;
+            font-weight: 600;
+        }
+        
+        .score-display {
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .score-number {
+            font-size: 4rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .congratulations {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin: 1rem 0;
+        }
+        
+        .controls {
+            padding: 1.5rem 2rem;
+            border-radius: 0 0 20px 20px;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        @media (max-width: 768px) {
+            .quiz-container {
+                margin: 1rem;
+            }
+            
+            .question-text {
+                font-size: 1.1rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10">
+                <div class="quiz-container">
+                    <!-- Quiz Header -->
+                    <div class="quiz-header">
+                        <h1><i class="bi bi-patch-question-fill me-2"></i>Interactive Quiz</h1>
+                        <p class="mb-0">Test your knowledge with our fun quiz!</p>
+                    </div>
+                    
+                    <!-- Quiz Content -->
+                    <div id="quiz-content">
+                        <!-- Question Container -->
+                        <div class="question-container" id="question-container">
+                            <!-- Timer -->
+                            <div class="timer" id="timer">
+                                <i class="bi bi-stopwatch me-2"></i>
+                                <span id="timer-text">15s</span>
+                            </div>
+                            
+                            <!-- Progress Bar -->
+                            <div class="progress mb-4">
+                                <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
+                            </div>
+                            
+                            <!-- Question Number -->
+                            <div class="question-number" id="question-number">
+                                Question 1 of 5
+                            </div>
+                            
+                            <!-- Question Text -->
+                            <div class="question-text" id="question-text">
+                                Loading question...
+                            </div>
+                            
+                            <!-- Answer Options -->
+                            <div id="answer-options">
+                                <!-- Options will be dynamically generated -->
+                            </div>
+                        </div>
+                        
+                        <!-- Score Display (Hidden initially) -->
+                        <div class="score-display d-none" id="score-display">
+                            <div class="score-number" id="final-score">0/5</div>
+                            <div class="congratulations" id="congratulations-message">
+                                Great job completing the quiz!
+                            </div>
+                            <p class="text-muted">Thanks for taking the time to test your knowledge!</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Controls -->
+                    <div class="controls">
+                        <div class="quiz-info" id="quiz-info">
+                            <small class="text-muted">Select an answer and click Next</small>
+                        </div>
+                        <div class="control-buttons">
+                            <button class="btn btn-primary" id="next-btn" onclick="nextQuestion()" disabled>
+                                Next Question <i class="bi bi-arrow-right ms-1"></i>
+                            </button>
+                            <button class="btn btn-success d-none" id="try-again-btn" onclick="restartQuiz()">
+                                <i class="bi bi-arrow-clockwise me-1"></i> Try Again
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // ========================================
+        // QUIZ DATA STORAGE
+        // ========================================
+        
+        // Array of quiz questions with answers and correct answer index
+        const quizData = [
+            {
+                question: "What is the capital of France?",
+                options: ["London", "Berlin", "Paris", "Madrid"],
+                correct: 2
+            },
+            {
+                question: "Which planet is known as the Red Planet?",
+                options: ["Venus", "Mars", "Jupiter", "Saturn"],
+                correct: 1
+            },
+            {
+                question: "What is the largest mammal in the world?",
+                options: ["African Elephant", "Blue Whale", "Giraffe", "Polar Bear"],
+                correct: 1
+            },
+            {
+                question: "Who painted the Mona Lisa?",
+                options: ["Vincent van Gogh", "Pablo Picasso", "Leonardo da Vinci", "Michelangelo"],
+                correct: 2
+            },
+            {
+                question: "What is the chemical symbol for gold?",
+                options: ["Go", "Gd", "Au", "Ag"],
+                correct: 2
+            },
+            {
+                question: "Which programming language is known as the 'language of the web'?",
+                options: ["Python", "JavaScript", "Java", "C++"],
+                correct: 1
+            },
+            {
+                question: "What year did World War II end?",
+                options: ["1944", "1945", "1946", "1947"],
+                correct: 1
+            },
+            {
+                question: "Which is the smallest country in the world?",
+                options: ["Monaco", "Nauru", "Vatican City", "San Marino"],
+                correct: 2
+            }
+        ];
+        
+        // ========================================
+        // QUIZ STATE VARIABLES
+        // ========================================
+        
+        let currentQuestionIndex = 0;  // Track current question
+        let score = 0;                 // Track user's score
+        let selectedAnswer = null;     // Track selected answer
+        let shuffledQuestions = [];    // Shuffled questions array
+        let timeLeft = 15;            // Timer countdown
+        let timerInterval = null;     // Timer interval reference
+        let quizStarted = false;      // Track if quiz has started
+        
+        // ========================================
+        // QUIZ INITIALIZATION
+        // ========================================
+        
+        // Initialize quiz when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeQuiz();
+        });
+        
+        // Shuffle questions and start quiz
+        function initializeQuiz() {
+            // Create a fresh copy and shuffle questions using Fisher-Yates algorithm
+            shuffledQuestions = [...quizData];
+            shuffleArray(shuffledQuestions);
+            
+            // Take only first 5 questions for the quiz
+            shuffledQuestions = shuffledQuestions.slice(0, 5);
+            
+            // Reset quiz state
+            currentQuestionIndex = 0;
+            score = 0;
+            selectedAnswer = null;
+            quizStarted = true;
+            
+            // Display first question
+            displayQuestion();
+            startTimer();
+        }
+        
+        // Fisher-Yates shuffle algorithm - ensures proper randomization every time
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+        
+        // ========================================
+        // QUESTION DISPLAY LOGIC
+        // ========================================
+        
+        // Display current question and options
+        function displayQuestion() {
+            const question = shuffledQuestions[currentQuestionIndex];
+            const questionContainer = document.getElementById('question-container');
+            const scoreDisplay = document.getElementById('score-display');
+            
+            // Show question container, hide score display
+            questionContainer.classList.remove('d-none');
+            scoreDisplay.classList.add('d-none');
+            
+            // Update question number and progress
+            document.getElementById('question-number').textContent = 
+                `Question ${currentQuestionIndex + 1} of ${shuffledQuestions.length}`;
+            
+            // Update progress bar
+            const progressPercentage = ((currentQuestionIndex) / shuffledQuestions.length) * 100;
+            document.getElementById('progress-bar').style.width = progressPercentage + '%';
+            
+            // Display question text
+            document.getElementById('question-text').textContent = question.question;
+            
+            // Generate answer options
+            const optionsContainer = document.getElementById('answer-options');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'answer-option';
+                optionDiv.onclick = () => selectAnswer(index, optionDiv);
+                
+                optionDiv.innerHTML = `
+                    <input type="radio" name="answer" value="${index}" id="option-${index}">
+                    <label for="option-${index}" style="cursor: pointer; flex: 1;">${option}</label>
+                `;
+                
+                optionsContainer.appendChild(optionDiv);
+            });
+            
+            // Reset selected answer and button state
+            selectedAnswer = null;
+            document.getElementById('next-btn').disabled = true;
+            document.getElementById('quiz-info').innerHTML = 
+                '<small class="text-muted">Select an answer and click Next</small>';
+        }
+        
+        // ========================================
+        // ANSWER SELECTION LOGIC
+        // ========================================
+        
+        // Handle answer selection
+        function selectAnswer(answerIndex, optionElement) {
+            // Remove previous selection styling
+            document.querySelectorAll('.answer-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // Add selection styling to clicked option
+            optionElement.classList.add('selected');
+            
+            // Update selected answer and enable next button
+            selectedAnswer = answerIndex;
+            document.getElementById('next-btn').disabled = false;
+            
+            // Update radio button
+            document.getElementById(`option-${answerIndex}`).checked = true;
+            
+            // Update info text
+            document.getElementById('quiz-info').innerHTML = 
+                '<small class="text-success"><i class="bi bi-check-circle me-1"></i>Answer selected!</small>';
+        }
+        
+        // ========================================
+        // TIMER FUNCTIONALITY
+        // ========================================
+        
+        // Start the 15-second timer
+        function startTimer() {
+            timeLeft = 15;
+            updateTimerDisplay();
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                
+                // Add warning animation when time is low
+                const timerElement = document.getElementById('timer');
+                if (timeLeft <= 5) {
+                    timerElement.classList.add('warning');
+                } else {
+                    timerElement.classList.remove('warning');
+                }
+                
+                // Auto-move to next question when time runs out
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    nextQuestion();
+                }
+            }, 1000);
+        }
+        
+        // Update timer display
+        function updateTimerDisplay() {
+            document.getElementById('timer-text').textContent = `${timeLeft}s`;
+        }
+        
+        // Stop the timer
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            document.getElementById('timer').classList.remove('warning');
+        }
+        
+        // ========================================
+        // QUIZ NAVIGATION LOGIC
+        // ========================================
+        
+        // Move to next question or show results
+        function nextQuestion() {
+            // Stop current timer
+            stopTimer();
+            
+            // Check answer and update score
+            if (selectedAnswer !== null) {
+                const currentQuestion = shuffledQuestions[currentQuestionIndex];
+                if (selectedAnswer === currentQuestion.correct) {
+                    score++;
+                }
+            }
+            
+            // Move to next question or show results
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex < shuffledQuestions.length) {
+                // Display next question
+                displayQuestion();
+                startTimer();
+            } else {
+                // Show final results
+                showResults();
+            }
+        }
+        
+        // ========================================
+        // RESULTS DISPLAY LOGIC
+        // ========================================
+        
+        // Display final quiz results
+        function showResults() {
+            // Hide question container and show score display
+            document.getElementById('question-container').classList.add('d-none');
+            document.getElementById('score-display').classList.remove('d-none');
+            
+            // Update progress bar to 100%
+            document.getElementById('progress-bar').style.width = '100%';
+            
+            // Display final score
+            document.getElementById('final-score').textContent = `${score}/${shuffledQuestions.length}`;
+            
+            // Generate congratulations message based on score
+            const percentage = (score / shuffledQuestions.length) * 100;
+            let message = '';
+            
+            if (percentage === 100) {
+                message = '🎉 Perfect Score! Outstanding work!';
+            } else if (percentage >= 80) {
+                message = '🌟 Excellent! You did great!';
+            } else if (percentage >= 60) {
+                message = '👍 Good job! Keep learning!';
+            } else if (percentage >= 40) {
+                message = '📚 Not bad! Room for improvement!';
+            } else {
+                message = '💪 Keep trying! Practice makes perfect!';
+            }
+            
+            document.getElementById('congratulations-message').textContent = message;
+            
+            // Show Try Again button and hide Next button
+            document.getElementById('next-btn').classList.add('d-none');
+            document.getElementById('try-again-btn').classList.remove('d-none');
+            
+            // Update quiz info
+            document.getElementById('quiz-info').innerHTML = 
+                '<small class="text-muted">Quiz completed! Click "Try Again" to restart.</small>';
+        }
+        
+        // ========================================
+        // QUIZ RESTART FUNCTIONALITY
+        // ========================================
+        
+        // Restart the quiz
+        function restartQuiz() {
+            // Stop any running timer
+            stopTimer();
+            
+            // Reset UI elements
+            document.getElementById('next-btn').classList.remove('d-none');
+            document.getElementById('try-again-btn').classList.add('d-none');
+            document.getElementById('next-btn').innerHTML = 
+                'Next Question <i class="bi bi-arrow-right ms-1"></i>';
+            
+            // Initialize quiz again
+            initializeQuiz();
+        }
+        
+        // ========================================
+        // KEYBOARD NAVIGATION (BONUS)
+        // ========================================
+        
+        // Add keyboard support for better accessibility
+        document.addEventListener('keydown', function(event) {
+            // Only handle keyboard events during active quiz
+            if (!quizStarted || document.getElementById('question-container').classList.contains('d-none')) {
+                return;
+            }
+            
+            // Handle number keys 1-4 for answer selection
+            if (event.key >= '1' && event.key <= '4') {
+                const answerIndex = parseInt(event.key) - 1;
+                const optionElements = document.querySelectorAll('.answer-option');
+                
+                if (answerIndex < optionElements.length) {
+                    selectAnswer(answerIndex, optionElements[answerIndex]);
+                }
+            }
+            
+            // Handle Enter key for next question
+            if (event.key === 'Enter' && selectedAnswer !== null) {
+                nextQuestion();
+            }
+        });
+        
+        // ========================================
+        // UTILITY FUNCTIONS
+        // ========================================
+        
+        // Add smooth animations when transitioning between questions
+        function fadeTransition(callback) {
+            const container = document.getElementById('question-container');
+            container.style.opacity = '0.5';
+            container.style.transform = 'translateY(10px)';
+            
+            setTimeout(() => {
+                callback();
+                container.style.opacity = '1';
+                container.style.transform = 'translateY(0)';
+            }, 150);
+        }
+    </script>
+</body>
+</html>
